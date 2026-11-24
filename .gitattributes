@@ -1,0 +1,5 @@
+# Saltos de línea LF en el repositorio y en la copia de trabajo: los scripts SQL y Groovy corren dentro de
+# contenedores Linux, y así el proyecto queda igual en Windows, Mac y Linux.
+* text=auto eol=lf
+*.png binary
+*.jar binary

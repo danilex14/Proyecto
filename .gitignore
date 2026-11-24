@@ -1,0 +1,24 @@
+# Entorno Python
+.venv/
+__pycache__/
+*.pyc
+
+# Datos: se regeneran con los scripts (ver README, Paso 3)
+#   python download_usgs.py --region global ...   (175 MB)
+#   python gen_demo_catalog.py
+data/*
+!data/.gitkeep
+
+# Driver JDBC de NiFi: se descarga de Maven Central (ver README, Paso 7)
+nifi/drivers/*
+!nifi/drivers/.gitkeep
+
+# Logs de corridas (los resultados que importan quedan en los CSV, TXT y PNG de resultados/)
+*.log
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

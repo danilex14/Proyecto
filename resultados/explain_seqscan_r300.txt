@@ -1,0 +1,31 @@
+Limit  (cost=5409966.83..18149556.56 rows=1 width=134) (actual time=739.236..13508.598 rows=50 loops=1)
+  Buffers: shared hit=533123 read=8008065
+  ->  Result  (cost=5409966.83..18149556.56 rows=1 width=134) (actual time=569.302..13338.614 rows=50 loops=1)
+        Buffers: shared hit=533123 read=8008065
+        ->  Sort  (cost=5409966.83..5409966.84 rows=1 width=1214) (actual time=257.128..257.261 rows=50 loops=1)
+              Sort Key: s.magnitud DESC
+              Sort Method: quicksort  Memory: 145kB
+              Buffers: shared hit=12173 read=157115
+              ->  Gather  (cost=1000.00..5409966.82 rows=1 width=1214) (actual time=141.233..257.105 rows=60 loops=1)
+                    Workers Planned: 2
+                    Workers Launched: 2
+                    Buffers: shared hit=12173 read=157115
+                    ->  Parallel Seq Scan on sismos s  (cost=0.00..5408966.72 rows=1 width=1214) (actual time=145.040..239.942 rows=20 loops=3)
+                          Filter: ((magnitud >= '6'::double precision) AND (magnitud <= '8'::double precision) AND (ts < '2026-11-23 22:57:08.074169+00'::timestamp with time zone) AND (event_id <> 'bench-ref'::text) AND (fuente <> 'sim'::text) AND (width_bucket(profundidad_km, '{70,300}'::real[]) = 0) AND st_dwithin((geom)::geography, '0101000020E6100000CDCCCCCCCC2C52C06666666666E641C0'::geography, '300000'::double precision, true))
+                          Rows Removed by Filter: 334680
+                          Buffers: shared hit=12173 read=157115
+        SubPlan 1
+          ->  Aggregate  (cost=12739577.19..12739577.20 rows=1 width=8) (actual time=261.585..261.585 rows=1 loops=50)
+                Buffers: shared hit=520950 read=7850950
+                ->  Seq Scan on sismos e  (cost=0.00..12739577.19 rows=1 width=0) (actual time=197.134..261.576 rows=1 loops=50)
+                      Filter: ((ts > s.ts) AND (magnitud >= '4'::double precision) AND (event_id <> s.event_id) AND (ts <= (s.ts + '01:00:00'::interval)) AND st_intersects(s.buffer_geom, geom))
+                      Rows Removed by Filter: 1004099
+                      Buffers: shared hit=520950 read=7850950
+Planning:
+  Buffers: shared hit=8
+Planning Time: 0.881 ms
+JIT:
+  Functions: 25
+  Options: Inlining true, Optimization true, Expressions true, Deforming true
+  Timing: Generation 3.131 ms, Inlining 137.176 ms, Optimization 179.887 ms, Emission 117.061 ms, Total 437.254 ms
+Execution Time: 13510.747 ms

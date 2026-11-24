@@ -1,0 +1,42 @@
+Limit  (cost=382.71..523.68 rows=1 width=134) (actual time=2.595..3.010 rows=6 loops=1)
+  Buffers: shared hit=245
+  ->  Result  (cost=382.71..523.68 rows=1 width=134) (actual time=2.594..3.008 rows=6 loops=1)
+        Buffers: shared hit=245
+        ->  Sort  (cost=382.71..382.71 rows=1 width=1214) (actual time=2.175..2.177 rows=6 loops=1)
+              Sort Key: s.magnitud DESC
+              Sort Method: quicksort  Memory: 37kB
+              Buffers: shared hit=172
+              ->  Bitmap Heap Scan on sismos s  (cost=234.12..382.70 rows=1 width=1214) (actual time=2.128..2.163 rows=6 loops=1)
+                    Recheck Cond: ((magnitud >= '6.5'::double precision) AND (magnitud <= '7.5'::double precision))
+                    Filter: ((ts < '2026-11-23 22:57:08.074169+00'::timestamp with time zone) AND (event_id <> 'bench-ref'::text) AND (fuente <> 'sim'::text) AND (width_bucket(profundidad_km, '{70,300}'::real[]) = 0) AND st_dwithin((geom)::geography, '0101000020E6100000CDCCCCCCCC2C52C06666666666E641C0'::geography, '150000'::double precision, true))
+                    Rows Removed by Filter: 6
+                    Heap Blocks: exact=11
+                    Buffers: shared hit=172
+                    ->  BitmapAnd  (cost=234.12..234.12 rows=9 width=0) (actual time=2.105..2.106 rows=0 loops=1)
+                          Buffers: shared hit=161
+                          ->  Bitmap Index Scan on idx_sismos_mag  (cost=0.00..52.16 rows=2373 width=0) (actual time=0.149..0.150 rows=2122 loops=1)
+                                Index Cond: ((magnitud >= '6.5'::double precision) AND (magnitud <= '7.5'::double precision))
+                                Buffers: shared hit=8
+                          ->  Bitmap Index Scan on idx_sismos_geog  (cost=0.00..181.71 rows=3907 width=0) (actual time=1.878..1.878 rows=5009 loops=1)
+                                Index Cond: ((geom)::geography && _st_expand('0101000020E6100000CDCCCCCCCC2C52C06666666666E641C0'::geography, '150000'::double precision))
+                                Buffers: shared hit=153
+        SubPlan 1
+          ->  Aggregate  (cost=128.44..128.45 rows=1 width=8) (actual time=0.133..0.133 rows=1 loops=6)
+                Buffers: shared hit=73
+                ->  Bitmap Heap Scan on sismos e  (cost=111.91..128.44 rows=1 width=0) (actual time=0.128..0.131 rows=2 loops=6)
+                      Recheck Cond: ((ts > s.ts) AND (ts <= (s.ts + '01:00:00'::interval)))
+                      Filter: ((magnitud >= '4'::double precision) AND (event_id <> s.event_id) AND st_intersects(s.buffer_geom, geom))
+                      Heap Blocks: exact=5
+                      Buffers: shared hit=73
+                      ->  BitmapAnd  (cost=111.91..111.91 rows=1 width=0) (actual time=0.124..0.124 rows=0 loops=6)
+                            Buffers: shared hit=68
+                            ->  Bitmap Index Scan on idx_sismos_geom  (cost=0.00..5.04 rows=100 width=0) (actual time=0.096..0.096 rows=424 loops=6)
+                                  Index Cond: (geom && s.buffer_geom)
+                                  Buffers: shared hit=50
+                            ->  Bitmap Index Scan on idx_sismos_ts  (cost=0.00..106.63 rows=5020 width=0) (actual time=0.021..0.021 rows=6 loops=6)
+                                  Index Cond: ((ts > s.ts) AND (ts <= (s.ts + '01:00:00'::interval)))
+                                  Buffers: shared hit=18
+Planning:
+  Buffers: shared hit=8
+Planning Time: 0.579 ms
+Execution Time: 3.065 ms

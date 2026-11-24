@@ -1,0 +1,54 @@
+services:
+  postgis:
+    image: postgis/postgis:16-3.4
+    container_name: sismos-postgis
+    # /dev/shm por defecto es 64 MB: con ~1 M de filas VACUUM/ANALYZE e índices en paralelo fallan
+    # ("could not resize shared memory segment ... No space left on device")
+    shm_size: 512mb
+    environment:
+      POSTGRES_USER: sismos
+      POSTGRES_PASSWORD: sismos
+      POSTGRES_DB: sismos
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # todo lo que esté en ./sql se ejecuta SOLO la primera vez que se crea el volumen
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # por TCP (-h 127.0.0.1): durante la creación del esquema PostgreSQL corre un servidor temporal que solo
+      # escucha por socket local; por socket diría "healthy" antes de que exista la tabla sismos
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U sismos -d sismos"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis/redis-stack-server:latest
+    container_name: sismos-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # NiFi es pesado (~2 GB de RAM). Solo arranca con:  docker compose --profile nifi up -d
+  nifi:
+    image: apache/nifi:1.28.1
+    container_name: sismos-nifi
+    profiles: ["nifi"]
+    environment:
+      NIFI_WEB_HTTP_PORT: "8080"
+      NIFI_JVM_HEAP_INIT: "1g"
+      NIFI_JVM_HEAP_MAX: "2g"
+    ports:
+      - "8080:8080"   # interfaz web: http://localhost:8080/nifi
+      - "8081:8081"   # ListenHTTP: aquí el simulador envía los eventos
+    volumes:
+      # coloca aquí postgresql-42.x.jar (driver JDBC) para PutDatabaseRecord
+      - ./nifi/drivers:/opt/nifi/drivers:ro
+
+volumes:
+  pgdata:
