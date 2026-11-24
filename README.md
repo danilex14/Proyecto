@@ -2,6 +2,10 @@
 
 Curso Procesamiento Masivo de Datos, USM 2026-2.
 
+**Integrantes:** Danilo Paredes y Felipe Contreras.
+
+Guía para la demostración en vivo: [DEMO.md](DEMO.md).
+
 ```
                      ┌─────────────────────── NiFi (opcional, Paso 7) ───────────────────────┐
 simulador ──HTTP──►  │ ListenHTTP ─► ValidateRecord ─┬─► ExecuteGroovyScript (XADD) ──────────┼─► Redis Stream sismos:in
